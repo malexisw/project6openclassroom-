@@ -56,6 +56,19 @@ exports.createSauces = (req, res) => {
 };
 
 exports.updateSauces = (req, res) => {
+  Sauces.findOne({ _id: req.params.id }).then((sauce) => {
+    if (!sauce) {
+      return res.status(404).json({
+        message: "Objet non trouvé !",
+      });
+    }
+    if (sauce.userId !== req.auth.userId) {
+      return res.status(401).json({
+        message: "Requête non autorisée !",
+      });
+    }
+  });
+  
   let sauces = new Sauces(
     typeof req.body.sauce === "string" ? JSON.parse(req.body.sauce) : req.body
   );
@@ -93,6 +106,19 @@ exports.updateSauces = (req, res) => {
 };
 
 exports.deleteSauces = (req, res) => {
+  Sauces.findOne({ _id: req.params.id }).then((sauce) => {
+    if (!sauce) {
+      return res.status(404).json({
+        message: "Objet non trouvé !",
+      });
+    }
+    if (sauce.userId !== req.auth.userId) {
+      return res.status(401).json({
+        message: "Requête non autorisée !",
+      });
+    }
+  });
+
   Sauces.findByIdAndRemove(req.params.id)
     .then((sauce) => {
       if (sauce) {
