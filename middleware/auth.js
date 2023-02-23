@@ -7,6 +7,7 @@ module.exports = (req, res, next) => {
     const decodedToken = jwt.verify(token, tokenConfig);
     const userId = decodedToken.userId;
     req.auth = { userId: userId };
+    // See if the userId of the webPage and the userId of the request is the same
     if (req.body.userId && req.body.userId !== userId) {
       throw "Invalid user ID";
     } else {

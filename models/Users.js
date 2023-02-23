@@ -7,6 +7,7 @@ let UserSchema = new Schema({
     required: true,
     unique: true,
     validate: (email) => {
+      // Create a regex for email adresses
       const pattern = /^[A-Z0-9._%+-]+@([A-Z0-9-]+\.)+[A-Z]{2,4}$/i;
       return pattern.test(email);
     },
@@ -16,7 +17,7 @@ let UserSchema = new Schema({
     type: String,
     required: true,
     validate: (password) => {
-      //At least 1 lowercase/1 uppercase
+      // Create a regex for password that need to have at least 1 lowercase/1 uppercase
       const pattern = /^(?=.*[a-z])(?=.*[A-Z])/i;
       return pattern.test(password);
     },

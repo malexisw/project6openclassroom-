@@ -3,12 +3,15 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/Users");
 const { tokenConfig } = require("../config");
 
+// Function to signup
 exports.signup = (req, res) => {
+  // Hashing the password and create the new User
   bcrypt.hash(req.body.password, 10).then((hash) => {
     const user = new User({
       email: req.body.email,
       password: hash,
     });
+    // Saving the new user in the database
     user
       .save()
       .then(() => res.status(201).json({ message: "Utilisateur créé !" }))
@@ -16,7 +19,9 @@ exports.signup = (req, res) => {
   });
 };
 
+// Function to login
 exports.login = (req, res) => {
+  // Find the user with his email
   User.findOne({ email: req.body.email })
     .then((user) => {
       if (!user) {
@@ -24,6 +29,7 @@ exports.login = (req, res) => {
           .status(401)
           .json({ message: "Paire login/mot de passe incorrecte" });
       }
+      // Compare the 2 hashing of the password
       bcrypt
         .compare(req.body.password, user.password)
         .then((valid) => {
@@ -32,6 +38,7 @@ exports.login = (req, res) => {
               .status(401)
               .json({ message: "Paire login/mot de passe incorrecte" });
           }
+          // Create an unique token for the user
           const token = jwt.sign({ userId: user._id }, tokenConfig, {
             expiresIn: "24h",
           });
