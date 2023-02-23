@@ -1,6 +1,6 @@
 #Back End Piiquante
 
-## Pour lancer le server
+## Pour lancer le serveur
 ```
 - Renseigner l'URL de votre base de données dans le fichier config.js. Si vous voulez lancer le serveur sur un autre port que le 3000 changer alors le champ "port". 
 
