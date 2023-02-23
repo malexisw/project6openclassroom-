@@ -19,11 +19,14 @@ const limiter = rateLimit({
 const mongoDB = dbUrl;
 mongoose.connect(mongoDB, { useNewUrlParser: true, useUnifiedTopology: true });
 const app = express();
-app.use(cors());
-app.use(helmet());
-app.use(limiter);
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+// Use cors to avoid localhost conflict
+app.use(cors());
+// Use helmet to secure HTTP headers
+app.use(helmet());
+// Use a limiter to limit the number of request one user can make
+app.use(limiter);
 app.use(userRouter);
 app.use(saucesRouter);
 app.use("/images", express.static(path.join(__dirname, "images")));
