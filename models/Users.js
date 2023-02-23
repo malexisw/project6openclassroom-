@@ -16,8 +16,8 @@ let UserSchema = new Schema({
     type: String,
     required: true,
     validate: (password) => {
-      //At least 1 lowercase/1 uppercase/1 number
-      const pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/i;
+      //At least 1 lowercase/1 uppercase
+      const pattern = /^(?=.*[a-z])(?=.*[A-Z])/i;
       return pattern.test(password);
     },
     message: (props) => `${props.value} is not in correct format !!`,
