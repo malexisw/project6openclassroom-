@@ -23,13 +23,13 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 // Use cors to avoid localhost conflict
 app.use(cors());
-// Use helmet to secure HTTP headers
-app.use(helmet());
 // Use a limiter to limit the number of request one user can make
 app.use(limiter);
 app.use(userRouter);
 app.use(saucesRouter);
 app.use("/images", express.static(path.join(__dirname, "images")));
+// Use helmet to secure HTTP headers
+app.use(helmet());
 app.listen(port, () => {
   console.log("Server is running at port " + port);
 });
