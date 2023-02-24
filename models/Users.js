@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 let Schema = mongoose.Schema;
+var uniqueValidator = require('mongoose-unique-validator');
 
 let UserSchema = new Schema({
   email: {
@@ -24,6 +25,8 @@ let UserSchema = new Schema({
     message: (props) => `${props.value} is not in correct format !!`,
   },
 });
+
+userSchema.plugin(uniqueValidator);
 
 const User = mongoose.model("User", UserSchema);
 
