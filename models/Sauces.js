@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 let Schema = mongoose.Schema;
-var uniqueValidator = require('mongoose-unique-validator');
 
 let sauceSchema = new Schema({
   userId: { type: String, required: true },
@@ -11,12 +10,10 @@ let sauceSchema = new Schema({
   imageUrl: { type: String, required: true },
   heat: { type: Number, required: true },
   likes: { type: Number, required: true },
-  dislikes: Number,
+  dislikes: { type: Number, required: true },
   usersLiked: [String],
   usersDisliked: [String],
 });
-
-sauceSchema.plugin(uniqueValidator);
 
 let Sauces = mongoose.model("Sauces", sauceSchema);
 
