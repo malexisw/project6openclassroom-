@@ -1,4 +1,5 @@
 const Sauces = require("../models/Sauces");
+const fs = require("fs");
 
 // Function to get all the sauces
 exports.getAllSauces = (req, res) => {
@@ -60,49 +61,23 @@ exports.createSauces = (req, res) => {
     });
 };
 
-// Function to update one Sauce
-exports.updateSauces = (req, res) => {
-  // Find the sauce to update with the id to see if it exist
-  Sauces.findOne({ _id: req.params.id }).then((sauce) => {
-    if (!sauce) {
-      return res.status(404).json({
-        message: "Objet non trouvé !",
-      });
-    }
-    if (sauce.userId !== req.auth.userId) {
-      return res.status(401).json({
-        message: "Requête non autorisée !",
-      });
-    }
-  });
-  // Get the sauce from the body, if there's an image update we need to do a parse if not we just take the sauce
-  let sauces = new Sauces(
-    typeof req.body.sauce === "string" ? JSON.parse(req.body.sauce) : req.body
-  );
-
-  // Set the image
-  let imageUrlUpdated = undefined;
-  req.file
-    ? (imageUrlUpdated = `${req.protocol}://${req.get("host")}/images/${
-        req.file.filename
-      }`)
-    : (imageUrlUpdated = sauces.imageUrl);
-
+// Function to update the sauce in the database
+const dataBadeSauceUpdate = (sauce, image, id, res) => {
   //Initialize the sauce updated
   let saucesUpdated = {
-    userId: sauces.userId,
-    name: sauces.name,
-    manufacturer: sauces.manufacturer,
-    description: sauces.description,
-    mainPepper: sauces.mainPepper,
-    heat: sauces.heat,
-    usersLiked: sauces.usersLiked,
-    usersDisliked: sauces.usersDisliked,
-    imageUrl: imageUrlUpdated,
+    userId: sauce.userId,
+    name: sauce.name,
+    manufacturer: sauce.manufacturer,
+    description: sauce.description,
+    mainPepper: sauce.mainPepper,
+    heat: sauce.heat,
+    usersLiked: sauce.usersLiked,
+    usersDisliked: sauce.usersDisliked,
+    imageUrl: image ? image : sauce.imageUrl,
   };
 
   // Update the sauce in the database
-  Sauces.updateOne({ _id: req.params.id }, saucesUpdated)
+  Sauces.updateOne({ _id: id }, saucesUpdated)
     .then(() => {
       res.status(201).json({
         message: "Sauce updated successfully!",
@@ -115,39 +90,82 @@ exports.updateSauces = (req, res) => {
     });
 };
 
-// Function to delete one Sauce
-exports.deleteSauces = (req, res) => {
-  // Find the sauce to delete with the id to make sure it exist
+// Function to check if the updated sauce as an image from multer ro not and call the update function
+exports.updateSauces = (req, res) => {
+  // Find the sauce to update with the id to see if it exist
   Sauces.findOne({ _id: req.params.id }).then((sauce) => {
-    if (!sauce) {
-      return res.status(404).json({
-        message: "Objet non trouvé !",
+    // Get the sauce from the body, if there's an image update we need to do a parse if not we just take the sauce
+    let bodyUpdate = new Sauces(
+      typeof req.body.sauce === "string" ? JSON.parse(req.body.sauce) : req.body
+    );
+    // Set the image
+    let imageUrlUpdated = undefined;
+    req.file
+      ? (imageUrlUpdated = `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`)
+      : (imageUrlUpdated = sauce.imageUrl);
+
+    //Initialize the sauce updated
+    let saucesUpdated = {
+      userId: bodyUpdate.userId,
+      name: bodyUpdate.name,
+      manufacturer: bodyUpdate.manufacturer,
+      description: bodyUpdate.description,
+      mainPepper: bodyUpdate.mainPepper,
+      heat: bodyUpdate.heat,
+      usersLiked: bodyUpdate.usersLiked,
+      usersDisliked: bodyUpdate.usersDisliked,
+    };
+
+    // If the image is updated we delete the old one before
+    if (typeof req.body.sauce === "string") {
+      const filename = sauce.imageUrl.split("/images/")[1]; // Finding the image's name
+      saucesUpdated.imageUrl = imageUrlUpdated;
+      fs.unlink(`images/${filename}`, () => {
+        // Update the sauce in the database
+        Sauces.updateOne({ _id: req.params.id }, saucesUpdated)
+          .then(() => {
+            res.status(201).json({
+              message: "Sauce updated successfully!",
+            });
+          })
+          .catch((error) => {
+            res.status(400).json({
+              error: error,
+            });
+          });
       });
-    }
-    if (sauce.userId !== req.auth.userId) {
-      return res.status(401).json({
-        message: "Requête non autorisée !",
-      });
+    } else {
+      // Update the sauce in the database
+      Sauces.updateOne({ _id: req.params.id }, saucesUpdated)
+        .then(() => {
+          res.status(201).json({
+            message: "Sauce updated successfully!",
+          });
+        })
+        .catch((error) => {
+          res.status(400).json({
+            error: error,
+          });
+        });
     }
   });
-  // Find the sauce to delete with the id
-  Sauces.findByIdAndRemove(req.params.id)
+};
+
+// Function to delete one Sauce
+exports.deleteSauces = (req, res) => {
+  // Delete the sauce with the id to make sure it exist
+  Sauces.findOne({ _id: req.params.id })
     .then((sauce) => {
-      if (sauce) {
-        res.status(200).json({
-          message: "Sauce deleted successfully",
-        });
-      } else {
-        res.status(400).json({
-          message: "No post found",
-        });
-      }
-    })
-    .catch((error) => {
-      res.status(400).json({
-        error: error,
+      const filename = sauce.imageUrl.split("/images/")[1]; // Finding the image's name
+      fs.unlink(`images/${filename}`, () => {
+        Sauces.deleteOne({ _id: req.params.id }) // Deleting the image in DB after deleting it from disk
+          .then(() => res.status(200).json({ message: "Objet supprimé !" }))
+          .catch((error) => res.status(400).json({ error }));
       });
-    });
+    })
+    .catch((error) => res.status(500).json({ error }));
 };
 
 // Function to lide/dislike one Sauce
